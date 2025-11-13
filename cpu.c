@@ -11,6 +11,10 @@ uint8_t read(uint16_t addr) {
     return ram[addr & 0xFFFF];
 }
 
+uint8_t fetch(_state* state) {
+    if (!state->)
+}
+
 void set_flag(_state* state, _flag flag) {
     state->status |= flag;
 }
@@ -79,10 +83,18 @@ void nmi(_state* state) {
 }
 
 void clock(_state* state) {
-    if (state->cycles) {
-        state->cycles--;
+    if (state->cycles--) {
         return;
     }
+
+    uint8_t opcode = read(state->pc++);
+    state->instr = instructions[opcode];
+    state->cycles = state->instr.cycle_count;
+
+    uint8_t am_cycle = state->instr.addr_mode(state);
+    uint8_t op_cycle = state->instr.execute(state);
+
+    state->cycles += (am_cycle & op_cycle);
 }
 
 int main() {

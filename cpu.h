@@ -13,16 +13,7 @@
 #define RST_VECTOR 0xFFFC
 #define IRQ_VECTOR 0xFFFE
 
-typedef struct _state {
-    uint8_t ra, rx, ry; // a/x/y registers
-    uint8_t status;     // status register
-    uint8_t stack;      // stack pointer
-    uint16_t pc;        // program counter
-    uint8_t cycles;     // cycle counter
-    uint16_t addr;      // abs/rel addr
-    uint8_t data;       // data byte
-    uint8_t stop;
-} _state;
+struct _state;
 
 typedef enum _operand {
     _op_adc, _op_and, _op_asl, _op_bcc, _op_bcs, _op_beq, _op_bit, _op_bmi,
@@ -65,6 +56,18 @@ typedef struct _instruction {
     uint8_t (*addr_mode)(_state*);
     uint8_t cycle_count;
 } _instruction;
+
+typedef struct _state {
+    uint8_t ra, rx, ry; // a/x/y registers
+    uint8_t status;     // status register
+    uint8_t stack;      // stack pointer
+    uint16_t pc;        // program counter
+    uint8_t cycles;     // cycle counter
+    uint16_t addr;      // abs/rel addr
+    uint8_t data;       // data byte
+    uint8_t stop;       // execution stopped
+    _instruction instr; // current instruction
+} _state;
 
 typedef enum _flag {
     _C = (1 << 0),  // carry
@@ -114,6 +117,7 @@ static _instruction instructions[256] = {
 
 void write(uint16_t addr, uint8_t data);
 uint8_t read(uint16_t addr);
+uint8_t fetch(_state* state);
 
 void set_flag(_state* state, _flag flag);
 void rst_flag(_state* state, _flag flag);
