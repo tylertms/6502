@@ -83,8 +83,6 @@ void clock(_state* state) {
         state->cycles--;
         return;
     }
-
-
 }
 
 int main() {

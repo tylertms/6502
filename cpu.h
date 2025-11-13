@@ -4,8 +4,10 @@
 #define IN(operand, addr_mode, cycles) \
     {_op_##operand, op_##operand, am_##addr_mode, cycles}
 
-#define ILLEGAL_INSTRCT \
-    IN(___, ___, 0)
+#define ILLEGAL_INSTRCT IN(___, ___, 0)
+
+#define O(operand) op_##operand(_state* state)
+#define A(mode) am_##mode(_state* state)
 
 #define NMI_VECTOR 0xFFFA
 #define RST_VECTOR 0xFFFC
@@ -41,25 +43,25 @@ typedef enum _mode {
 } _mode;
 
 
-uint8_t op_adc(), op_and(), op_asl(), op_bcc(), op_bcs(), op_beq(), op_bit(), op_bmi(),
-        op_bne(), op_bpl(), op_brk(), op_bvc(), op_bvs(), op_clc(), op_cld(), op_cli(),
-        op_clv(), op_cmp(), op_cpx(), op_cpy(), op_dec(), op_dex(), op_dey(), op_eor(),
-        op_inc(), op_inx(), op_iny(), op_jmp(), op_jsr(), op_lda(), op_ldx(), op_ldy(),
-        op_lsr(), op_nop(), op_ora(), op_pha(), op_php(), op_pla(), op_plp(), op_rol(),
-        op_ror(), op_rti(), op_rts(), op_sbc(), op_sec(), op_sed(), op_sei(), op_sta(),
-        op_stx(), op_sty(), op_tax(), op_tay(), op_tsx(), op_txa(), op_txs(), op_tya(),
-        op____();
+uint8_t O(adc), O(and), O(asl), O(bcc), O(bcs), O(beq), O(bit), O(bmi),
+        O(bne), O(bpl), O(brk), O(bvc), O(bvs), O(clc), O(cld), O(cli),
+        O(clv), O(cmp), O(cpx), O(cpy), O(dec), O(dex), O(dey), O(eor),
+        O(inc), O(inx), O(iny), O(jmp), O(jsr), O(lda), O(ldx), O(ldy),
+        O(lsr), O(nop), O(ora), O(pha), O(php), O(pla), O(plp), O(rol),
+        O(ror), O(rti), O(rts), O(sbc), O(sec), O(sed), O(sei), O(sta),
+        O(stx), O(sty), O(tax), O(tay), O(tsx), O(txa), O(txs), O(tya),
+        O(___);
 
-uint8_t am_acc(), am_imp(), am_imm(),
-        am_zpg(), am_zpx(), am_zpy(),
-        am_abs(), am_abx(), am_aby(),
-        am_idr(), am_idx(), am_idy(),
-        am_rel(), am____();
+uint8_t A(acc), A(imp), A(imm),
+        A(zpg), A(zpx), A(zpy),
+        A(abs), A(abx), A(aby),
+        A(idr), A(idx), A(idy),
+        A(rel), A(___);
 
 typedef struct _instruction {
     _operand operand;
-    uint8_t (*execute)(void);
-    uint8_t (*addr_mode)(void);
+    uint8_t (*execute)(_state*);
+    uint8_t (*addr_mode)(_state*);
     uint8_t cycle_count;
 } _instruction;
 
@@ -108,3 +110,16 @@ static _instruction instructions[256] = {
     IN(beq, rel, 2), IN(sbc, idy, 5), ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, IN(sbc, zpx, 4), IN(inc, zpx, 6), ILLEGAL_INSTRCT,     // 0xF0 - 0xF7
     IN(sed, imp, 2), IN(sbc, aby, 4), ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, IN(sbc, abx, 4), IN(inc, abx, 7), ILLEGAL_INSTRCT,     // 0xF8 - 0xFF
 };
+
+void write(uint16_t addr, uint8_t data);
+uint8_t read(uint16_t addr);
+
+void set_flag(_state* state, _flag flag);
+void rst_flag(_state* state, _flag flag);
+uint8_t get_flag(_state* state, _flag flag);
+
+void reset(_state* state);
+void irq(_state* state);
+void nmi(_state* state);
+
+void clock(_state* state);
