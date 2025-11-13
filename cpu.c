@@ -39,6 +39,7 @@ void reset(_state* state) {
     state->data = 0x00;
 
     state->cycles = 8;
+    state->stop = 0;
 }
 
 void irq(_state* state) {
@@ -85,5 +86,24 @@ void clock(_state* state) {
 }
 
 int main() {
+    _state state = {};
+
+    const uint16_t prog_start = 0x8000;
+    const uint16_t prog_len = 28;
+    const uint8_t prog[] = {0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18, 0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA};
+
+    for (uint16_t offset = 0; offset < prog_len; offset++) {
+        ram[prog_start + offset] = prog[offset];
+    }
+
+    ram[RST_VECTOR] = 0x00;
+    ram[RST_VECTOR + 1] = 0x80;
+
+    reset(&state);
+
+    while (!state.stop) {
+        clock(&state);
+    }
+
     return 0;
 }

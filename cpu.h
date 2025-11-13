@@ -21,6 +21,7 @@ typedef struct _state {
     uint8_t cycles;     // cycle counter
     uint16_t addr;      // abs/rel addr
     uint8_t data;       // data byte
+    uint8_t stop;
 } _state;
 
 typedef enum _operand {
