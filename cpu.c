@@ -13,7 +13,7 @@ uint8_t read(uint16_t addr) {
 }
 
 uint8_t fetch(_state* state) {
-    if (state->instr.mode != _am_imp) {
+    if (state->instr.addr_mode != _am_imp) {
         state->data = read(state->addr);
     }
     return state->data;
@@ -96,8 +96,8 @@ void clock(_state* state) {
     state->instr = instructions[opcode];
     state->cycles = state->instr.cycle_count;
 
-    uint8_t am_cycle = state->instr.addr_mode(state);
-    uint8_t op_cycle = state->instr.execute(state);
+    uint8_t am_cycle = state->instr.ex_am(state);
+    uint8_t op_cycle = state->instr.ex_op(state);
 
     state->cycles += (am_cycle & op_cycle);
 }

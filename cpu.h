@@ -53,9 +53,9 @@ uint8_t A(acc), A(imp), A(imm),
 
 typedef struct _instruction {
     _operand operand;
-    _mode mode;
-    uint8_t (*execute)(_state*);
-    uint8_t (*addr_mode)(_state*);
+    _mode addr_mode;
+    uint8_t (*ex_op)(_state*);
+    uint8_t (*ex_am)(_state*);
     uint8_t cycle_count;
 } _instruction;
 

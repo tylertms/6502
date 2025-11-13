@@ -325,7 +325,7 @@ uint8_t op_tya(_state* state) {
 
 uint8_t op____(_state* state) {
     fprintf(stderr, "ERROR: Illegal instruction called!\nPC: 0x%x, Addr: 0x%x, Data: 0x%x, Op: 0x%x, AM: 0x%x\n",
-        state->pc, state->addr, state->data, state->instr.operand, state->instr.mode);
+        state->pc, state->addr, state->data, state->instr.operand, state->instr.addr_mode);
     state->stop = 1;
     return 0;
 }
