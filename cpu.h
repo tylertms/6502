@@ -2,9 +2,10 @@
 #include <stdint.h>
 
 #define IN(operand, addr_mode, cycles) \
-    {_op_##operand, op_##operand, am_##addr_mode, cycles}
+    {_op_##operand, _am_##addr_mode, op_##operand, am_##addr_mode, cycles}
 
-#define ILLEGAL_INSTRCT IN(___, ___, 0)
+#define ILLEGAL_INSTRCT \
+    IN(___, ___, 0)
 
 #define O(operand) op_##operand(_state* state)
 #define A(mode) am_##mode(_state* state)
@@ -13,7 +14,7 @@
 #define RST_VECTOR 0xFFFC
 #define IRQ_VECTOR 0xFFFE
 
-struct _state;
+typedef struct _state _state;
 
 typedef enum _operand {
     _op_adc, _op_and, _op_asl, _op_bcc, _op_bcs, _op_beq, _op_bit, _op_bmi,
@@ -31,7 +32,7 @@ typedef enum _mode {
     _am_zpg, _am_zpx, _am_zpy,
     _am_abs, _am_abx, _am_aby,
     _am_idr, _am_idx, _am_idy,
-    _am_rel
+    _am_rel, _am____
 } _mode;
 
 
@@ -52,6 +53,7 @@ uint8_t A(acc), A(imp), A(imm),
 
 typedef struct _instruction {
     _operand operand;
+    _mode mode;
     uint8_t (*execute)(_state*);
     uint8_t (*addr_mode)(_state*);
     uint8_t cycle_count;

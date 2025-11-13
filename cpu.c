@@ -1,5 +1,6 @@
 #include "cpu.h"
 #include <stdint.h>
+#include <stdio.h>
 
 uint8_t ram[0x10000];
 
@@ -12,7 +13,10 @@ uint8_t read(uint16_t addr) {
 }
 
 uint8_t fetch(_state* state) {
-    if (!state->)
+    if (state->instr.mode != _am_imp) {
+        state->data = read(state->addr);
+    }
+    return state->data;
 }
 
 void set_flag(_state* state, _flag flag) {
@@ -88,6 +92,7 @@ void clock(_state* state) {
     }
 
     uint8_t opcode = read(state->pc++);
+    printf("FETCHED OPCODE: 0x%x FROM PC: 0x%x\n", opcode, state->pc - 1);
     state->instr = instructions[opcode];
     state->cycles = state->instr.cycle_count;
 
