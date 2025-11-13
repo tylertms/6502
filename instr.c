@@ -1,4 +1,5 @@
 #include "cpu.h"
+#include <stdio.h>
 
 /* address modes */
 
@@ -94,5 +95,236 @@ uint8_t am_rel(_state* state) {
 
 uint8_t am____(_state* state) {
     op____(state);
+    return 0;
+}
+
+/* Operations */
+
+uint8_t op_adc(_state* state) {
+	return 0;
+}
+
+uint8_t op_and(_state* state) {
+	return 0;
+}
+
+uint8_t op_asl(_state* state) {
+	return 0;
+}
+
+uint8_t op_bcc(_state* state) {
+	return 0;
+}
+
+uint8_t op_bcs(_state* state) {
+	return 0;
+}
+
+uint8_t op_beq(_state* state) {
+	return 0;
+}
+
+uint8_t op_bit(_state* state) {
+	return 0;
+}
+
+uint8_t op_bmi(_state* state) {
+	return 0;
+}
+
+uint8_t op_bne(_state* state) {
+	return 0;
+}
+
+uint8_t op_bpl(_state* state) {
+	return 0;
+}
+
+uint8_t op_brk(_state* state) {
+	return 0;
+}
+
+uint8_t op_bvc(_state* state) {
+	return 0;
+}
+
+uint8_t op_bvs(_state* state) {
+	return 0;
+}
+
+uint8_t op_clc(_state* state) {
+	return 0;
+}
+
+uint8_t op_cld(_state* state) {
+	return 0;
+}
+
+uint8_t op_cli(_state* state) {
+	return 0;
+}
+
+uint8_t op_clv(_state* state) {
+	return 0;
+}
+
+uint8_t op_cmp(_state* state) {
+	return 0;
+}
+
+uint8_t op_cpx(_state* state) {
+	return 0;
+}
+
+uint8_t op_cpy(_state* state) {
+	return 0;
+}
+
+uint8_t op_dec(_state* state) {
+	return 0;
+}
+
+uint8_t op_dex(_state* state) {
+	return 0;
+}
+
+uint8_t op_dey(_state* state) {
+	return 0;
+}
+
+uint8_t op_eor(_state* state) {
+	return 0;
+}
+
+uint8_t op_inc(_state* state) {
+	return 0;
+}
+
+uint8_t op_inx(_state* state) {
+	return 0;
+}
+
+uint8_t op_iny(_state* state) {
+	return 0;
+}
+
+uint8_t op_jmp(_state* state) {
+	return 0;
+}
+
+uint8_t op_jsr(_state* state) {
+	return 0;
+}
+
+uint8_t op_lda(_state* state) {
+	return 0;
+}
+
+uint8_t op_ldx(_state* state) {
+	return 0;
+}
+
+uint8_t op_ldy(_state* state) {
+	return 0;
+}
+
+uint8_t op_lsr(_state* state) {
+	return 0;
+}
+
+uint8_t op_nop(_state* state) {
+	return 0;
+}
+
+uint8_t op_ora(_state* state) {
+	return 0;
+}
+
+uint8_t op_pha(_state* state) {
+	return 0;
+}
+
+uint8_t op_php(_state* state) {
+	return 0;
+}
+
+uint8_t op_pla(_state* state) {
+	return 0;
+}
+
+uint8_t op_plp(_state* state) {
+	return 0;
+}
+
+uint8_t op_rol(_state* state) {
+	return 0;
+}
+
+uint8_t op_ror(_state* state) {
+	return 0;
+}
+
+uint8_t op_rti(_state* state) {
+	return 0;
+}
+
+uint8_t op_rts(_state* state) {
+	return 0;
+}
+
+uint8_t op_sbc(_state* state) {
+	return 0;
+}
+
+uint8_t op_sec(_state* state) {
+	return 0;
+}
+
+uint8_t op_sed(_state* state) {
+	return 0;
+}
+
+uint8_t op_sei(_state* state) {
+	return 0;
+}
+
+uint8_t op_sta(_state* state) {
+	return 0;
+}
+
+uint8_t op_stx(_state* state) {
+	return 0;
+}
+
+uint8_t op_sty(_state* state) {
+	return 0;
+}
+
+uint8_t op_tax(_state* state) {
+	return 0;
+}
+
+uint8_t op_tay(_state* state) {
+	return 0;
+}
+
+uint8_t op_tsx(_state* state) {
+	return 0;
+}
+
+uint8_t op_txa(_state* state) {
+	return 0;
+}
+
+uint8_t op_txs(_state* state) {
+	return 0;
+}
+
+uint8_t op_tya(_state* state) {
+	return 0;
+}
+
+uint8_t op____(_state* state) {
+    fprintf(stderr, "ERROR: Illegal instruction called.\n");
     return 0;
 }

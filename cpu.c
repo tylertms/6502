@@ -1,6 +1,5 @@
 #include "cpu.h"
 #include <stdint.h>
-#include <stdio.h>
 
 uint8_t ram[0x10000];
 
@@ -86,6 +85,5 @@ void clock(_state* state) {
 }
 
 int main() {
-    printf("%d, %d\n", instructions[0].execute(), instructions[0].cycle_count);
     return 0;
 }
