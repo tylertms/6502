@@ -2,7 +2,7 @@
 #include <stdint.h>
 
 #define IN(operand, addr_mode, cycles) \
-    {_op_##operand, _am_##addr_mode, op_##operand, am_##addr_mode, cycles}
+    {_op_##operand, #operand, _am_##addr_mode, #addr_mode, op_##operand, am_##addr_mode, cycles}
 
 #define ILLEGAL_INSTRCT \
     IN(___, ___, 0)
@@ -53,7 +53,9 @@ uint8_t A(acc), A(imp), A(imm),
 
 typedef struct _instruction {
     _operand operand;
+    char op_name[4];
     _mode addr_mode;
+    char am_name[4];
     uint8_t (*ex_op)(_state*);
     uint8_t (*ex_am)(_state*);
     uint8_t cycle_count;
@@ -69,6 +71,7 @@ typedef struct _state {
     uint8_t data;       // data byte
     uint8_t stop;       // execution stopped
     _instruction instr; // current instruction
+    uint8_t* ram;
 } _state;
 
 typedef enum _flag {
@@ -117,8 +120,8 @@ static _instruction instructions[256] = {
     IN(sed, imp, 2), IN(sbc, aby, 4), ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, IN(sbc, abx, 4), IN(inc, abx, 7), ILLEGAL_INSTRCT,     // 0xF8 - 0xFF
 };
 
-void write(uint16_t addr, uint8_t data);
-uint8_t read(uint16_t addr);
+void write(_state* state, uint16_t addr, uint8_t data);
+uint8_t read(_state* state, uint16_t addr);
 uint8_t fetch(_state* state);
 uint8_t is_imp(_state* state);
 
@@ -132,3 +135,4 @@ void irq(_state* state);
 void nmi(_state* state);
 
 void clock(_state* state);
+void print_state(_state* state);
