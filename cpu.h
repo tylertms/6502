@@ -71,7 +71,7 @@ typedef struct _state {
     uint8_t data;       // data byte
     uint8_t stop;       // execution stopped
     _instruction instr; // current instruction
-    uint8_t* ram;
+    uint8_t* ram;       // internal memory
 } _state;
 
 typedef enum _flag {
@@ -120,9 +120,9 @@ static _instruction instructions[256] = {
     IN(sed, imp, 2), IN(sbc, aby, 4), ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, ILLEGAL_INSTRCT, IN(sbc, abx, 4), IN(inc, abx, 7), ILLEGAL_INSTRCT,     // 0xF8 - 0xFF
 };
 
-void write(_state* state, uint16_t addr, uint8_t data);
-uint8_t read(_state* state, uint16_t addr);
-uint8_t fetch(_state* state);
+void mem_write(_state* state, uint16_t addr, uint8_t data);
+uint8_t mem_read(_state* state, uint16_t addr);
+uint8_t mem_fetch(_state* state);
 uint8_t is_imp(_state* state);
 
 void set_flag(_state* state, _flag flag, uint8_t value);
@@ -130,9 +130,10 @@ uint8_t get_flag(_state* state, _flag flag);
 
 void branch(_state* state);
 
-void reset(_state* state);
-void irq(_state* state);
-void nmi(_state* state);
+void cpu_reset(_state* state);
+void cpu_irq(_state* state);
+void cpu_nmi(_state* state);
 
-void clock(_state* state);
+void cpu_clock(_state* state);
 void print_state(_state* state);
+void deinit(_state* state);
