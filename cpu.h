@@ -62,16 +62,17 @@ typedef struct _instruction {
 } _instruction;
 
 typedef struct _state {
-    uint8_t ra, rx, ry; // a/x/y registers
-    uint8_t status;     // status register
-    uint8_t stack;      // stack pointer
-    uint16_t pc;        // program counter
-    uint8_t cycles;     // cycle counter
-    uint16_t addr;      // abs/rel addr
-    uint8_t data;       // data byte
-    uint8_t stop;       // execution stopped
-    _instruction instr; // current instruction
-    uint8_t* ram;       // internal memory
+    uint8_t ra, rx, ry;     // a/x/y registers
+    uint8_t status;         // status register
+    uint8_t stack;          // stack pointer
+    uint16_t pc;            // program counter
+    uint8_t cycles;         // cycle counter
+    uint16_t addr;          // abs/rel addr
+    uint8_t data;           // data byte
+    uint8_t stop;           // execution stopped
+    _instruction instr;     // current instruction
+    uint8_t ram[0x800];     // internal memory
+    uint8_t rom[0x4000];    // cartridge memory (mapper 0)
 } _state;
 
 typedef enum _flag {

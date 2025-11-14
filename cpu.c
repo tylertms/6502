@@ -1,25 +1,18 @@
 #include "cpu.h"
-
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 int main() {
     _state* state = (_state*)calloc(1, sizeof(_state));
-    state->ram = (uint8_t*)malloc(0x10000);
 
-    // 3 * 10 = 30
-    // In memory:
-    // $0000 * $0001 = $0002
-    const uint16_t prog_start = 0x8000;
+    const uint16_t rom_start = 0xC000;
     const uint16_t prog_len = 28;
     const uint8_t prog[] = {0xA2, 0x0A, 0x8E, 0x00, 0x00, 0xA2, 0x03, 0x8E, 0x01, 0x00, 0xAC, 0x00, 0x00, 0xA9, 0x00, 0x18, 0x6D, 0x01, 0x00, 0x88, 0xD0, 0xFA, 0x8D, 0x02, 0x00, 0xEA, 0xEA, 0xEA};
+    memcpy(state->rom, prog, prog_len);
 
-    for (uint16_t offset = 0; offset < prog_len; offset++) {
-        state->ram[prog_start + offset] = prog[offset];
-    }
-
-    state->ram[RST_VECTOR] = prog_start & 0xFF;
-    state->ram[RST_VECTOR + 1] = (prog_start >> 8) & 0xFF;
+    state->rom[RST_VECTOR - rom_start] = 0x00;
+    state->rom[RST_VECTOR - rom_start + 1] = 0x80;
 
     cpu_reset(state);
 
@@ -32,16 +25,24 @@ int main() {
 }
 
 void deinit(_state* state) {
-    free(state->ram);
     free(state);
 }
 
 void mem_write(_state* state, uint16_t addr, uint8_t data) {
-    state->ram[addr & 0xFFFF] = data;
+    state->ram[addr & 0x07FF] = data;
 }
 
 uint8_t mem_read(_state* state, uint16_t addr) {
-    return state->ram[addr & 0xFFFF];
+    if (0x0000 <= addr && addr <=0x07FF) {
+        return state->ram[addr & 0x07FF];
+    }
+
+    if (0x8000 <= addr && addr <= 0xFFFF) {
+        return state->rom[addr & 0x3FFF];
+    }
+
+    fprintf(stderr, "ERROR: Invalid memory address read: 0x%x\n", addr);
+    return 0x00;
 }
 
 uint8_t mem_fetch(_state* state) {
@@ -66,19 +67,21 @@ uint8_t is_imp(_state* state) {
 
 void branch(_state* state) {
     state->cycles++;
-    state->addr += state->pc;
+    uint16_t res = state->addr + state->pc;
 
-    if ((state->addr & 0xFF00) != (state->pc & 0xFF00)) {
+    if ((res & 0xFF00) != (state->pc & 0xFF00)) {
         state->cycles++;
     }
 
-    state->pc = state->addr;
+    state->pc = res;
 }
 
 void cpu_reset(_state* state) {
     uint16_t low = mem_read(state, RST_VECTOR);
     uint16_t high = mem_read(state, RST_VECTOR + 1);
     state->pc = (high << 8) | low;
+
+    printf("STARTING EXECUTION AT: 0x%x\n", state->pc);
 
     state->ra = 0x00;
     state->rx = 0x00;
@@ -136,7 +139,6 @@ void cpu_clock(_state* state) {
     }
 
     uint8_t opcode = mem_read(state, state->pc++);
-    if (!opcode) state->stop = 1;
 
     state->instr = instructions[opcode];
     state->cycles = state->instr.cycle_count;
@@ -144,9 +146,11 @@ void cpu_clock(_state* state) {
     uint8_t am_cycle = state->instr.ex_am(state);
     uint8_t op_cycle = state->instr.ex_op(state);
 
-    print_state(state);
-
     state->cycles += (am_cycle & op_cycle);
+
+    print_state(state);
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
 }
 
 void print_state(_state* state) {
@@ -154,11 +158,11 @@ void print_state(_state* state) {
         printf("-");
     }
 
-    printf("\nOP: %s | AM: %s | A: 0x%x | X: 0x%x | Y: 0x%x | STK: 0x%x | STAT: 0x%x\n",
-        state->instr.op_name, state->instr.am_name, state->ra,
-        state->rx, state->ry, state->stack, state->status);
+    printf("\nOP: %s | AM: %s | PC: 0x%x | A: 0x%x | X: 0x%x | Y: 0x%x | STK: 0x%x | STAT: 0x%x\n",
+        state->instr.op_name, state->instr.am_name, state->pc,
+        state->ra, state->rx, state->ry, state->stack, state->status);
 
-    for (int y = 0; y < 4; y++) {
+    for (int y = 0; y < 2; y++) {
         printf("$%.4x:", y << 5);
         for (int x = 0; x < (1 << 5); x++) {
             printf(" %.2x", state->ram[(y << 5) + x]);
@@ -166,18 +170,7 @@ void print_state(_state* state) {
         printf("\n");
     }
 
-    for (int x = 0; x < 102; x++) {
-        printf(" ");
-    }
-    printf("\n");
-
-    for (int y = 0; y < 4; y++) {
-        printf("$%.4x:", 0x8000 + (y << 5));
-        for (int x = 0; x < (1 << 5); x++) {
-            printf(" %.2x", state->ram[0x8000 + (y << 5) + x]);
-        }
-        printf("\n");
-    }
+    printf("Press Enter to continue...\n\n");
 }
 
 /* address modes */
