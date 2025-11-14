@@ -72,14 +72,14 @@ typedef struct _state {
 } _state;
 
 typedef enum _flag {
-    _C = (1 << 0),  // carry
-    _Z = (1 << 1),  // zero
-    _I = (1 << 2),  // interrupt disable
-    _D = (1 << 3),  // decimal mode (unused)
-    _B = (1 << 4),  // break/interrupt info
-    _U = (1 << 5),  // unused = 1
-    _V = (1 << 6),  // overflow
-    _N = (1 << 7),  // negative
+    C = (1 << 0),  // carry
+    Z = (1 << 1),  // zero
+    I = (1 << 2),  // interrupt disable
+    D = (1 << 3),  // decimal mode (unused)
+    B = (1 << 4),  // break/interrupt info
+    U = (1 << 5),  // unused = 1
+    V = (1 << 6),  // overflow
+    N = (1 << 7),  // negative
 } _flag;
 
 static _instruction instructions[256] = {
@@ -120,10 +120,12 @@ static _instruction instructions[256] = {
 void write(uint16_t addr, uint8_t data);
 uint8_t read(uint16_t addr);
 uint8_t fetch(_state* state);
+uint8_t is_imp(_state* state);
 
-void set_flag(_state* state, _flag flag);
-void rst_flag(_state* state, _flag flag);
+void set_flag(_state* state, _flag flag, uint8_t value);
 uint8_t get_flag(_state* state, _flag flag);
+
+void branch(_state* state);
 
 void reset(_state* state);
 void irq(_state* state);

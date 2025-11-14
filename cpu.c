@@ -13,35 +13,48 @@ uint8_t read(uint16_t addr) {
 }
 
 uint8_t fetch(_state* state) {
-    if (state->instr.addr_mode != _am_imp) {
+    if (!is_imp(state)) {
         state->data = read(state->addr);
     }
     return state->data;
 }
 
-void set_flag(_state* state, _flag flag) {
-    state->status |= flag;
-}
-
-void rst_flag(_state* state, _flag flag) {
-    state->status &= ~flag;
+void set_flag(_state* state, _flag flag, uint8_t value) {
+    if (value) state->status |= flag;
+    else state->status &= ~flag;
 }
 
 uint8_t get_flag(_state* state, _flag flag) {
-    return state->status & flag;
+    return (state->status & flag) ? 1 : 0;
+}
+
+uint8_t is_imp(_state* state) {
+    return state->instr.addr_mode = _am_imp;
+}
+
+void branch(_state* state) {
+    state->cycles++;
+    state->addr += state->pc;
+
+    if ((state->addr & 0xFF00) != (state->pc & 0xFF00)) {
+        state->cycles++;
+    }
+
+    state->pc = state->addr;
 }
 
 void reset(_state* state) {
     uint16_t low = read(RST_VECTOR);
     uint16_t high = read(RST_VECTOR + 1);
     state->pc = (high << 8) | low;
+    printf("STARTING EXECUTION AT: 0x%x\n", state->pc);
 
     state->ra = 0x00;
     state->rx = 0x00;
     state->ry = 0x00;
 
     state->stack = 0xFD;
-    state->status = 0x00 | _U;
+    state->status = 0x00 | U;
 
     state->addr = 0x0000;
     state->data = 0x00;
@@ -51,16 +64,16 @@ void reset(_state* state) {
 }
 
 void irq(_state* state) {
-    if (!get_flag(state, _I)) {
+    if (!get_flag(state, I)) {
         return;
     }
 
     write(0x0100 + state->stack--, (state->pc >> 8) & 0xFF);
     write(0x0100 + state->stack--, state->pc & 0xFF);
 
-    rst_flag(state, _B);
-    set_flag(state, _U);
-    set_flag(state, _I);
+    set_flag(state, B, 0);
+    set_flag(state, U, 1);
+    set_flag(state, I, 1);
     write(0x0100 + state->stack--, state->status);
 
     uint16_t low = read(IRQ_VECTOR);
@@ -74,9 +87,9 @@ void nmi(_state* state) {
     write(0x0100 + state->stack--, (state->pc >> 8) & 0xFF);
     write(0x0100 + state->stack--, state->pc & 0xFF);
 
-    rst_flag(state, _B);
-    set_flag(state, _U);
-    set_flag(state, _I);
+    set_flag(state, B, 0);
+    set_flag(state, U, 1);
+    set_flag(state, I, 1);
     write(0x0100 + state->stack--, state->status);
 
     uint16_t low = read(NMI_VECTOR);
@@ -92,7 +105,7 @@ void clock(_state* state) {
     }
 
     uint8_t opcode = read(state->pc++);
-    printf("FETCHED OPCODE: 0x%x FROM PC: 0x%x\n", opcode, state->pc - 1);
+    if (opcode) printf("FETCHED OPCODE: 0x%x FROM PC: 0x%x\n", opcode, state->pc - 1);
     state->instr = instructions[opcode];
     state->cycles = state->instr.cycle_count;
 

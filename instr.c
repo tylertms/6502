@@ -100,134 +100,316 @@ uint8_t am____(_state* state) {
 /* Operations */
 
 uint8_t op_adc(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    uint16_t res = (uint16_t)state->ra + (uint16_t)memory + get_flag(state, C);
+
+    uint16_t overflow = (res ^ state->ra) & (res ^ memory) & 0x80;
+    set_flag(state, C, res > 0xFF);
+    set_flag(state, Z, (res & 0xFF) == 0x00);
+    set_flag(state, V, overflow);
+    set_flag(state, N, res & 0x80);
+
+    state->ra = res & 0xFF;
+
+	return 1;
 }
 
 uint8_t op_and(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->ra &= memory;
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
+	return 1;
 }
 
 uint8_t op_asl(_state* state) {
+    uint8_t memory = fetch(state);
+    uint16_t res = (uint16_t)memory << 1;
+
+    set_flag(state, C, res > 255);
+    set_flag(state, Z, (res & 0xFF) == 0x00);
+    set_flag(state, N, res & 0x80);
+
+    if (is_imp(state)) {
+        state->ra = res & 0xFF;
+    } else {
+        write(state->addr, res & 0xFF);
+    }
+
 	return 0;
 }
 
 uint8_t op_bcc(_state* state) {
+    if (!get_flag(state, C)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_bcs(_state* state) {
+    if (get_flag(state, C)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_beq(_state* state) {
-	return 0;
+    if (get_flag(state, Z)) {
+        branch(state);
+    }
+
+    return 0;
 }
 
 uint8_t op_bit(_state* state) {
+    uint8_t memory = fetch(state);
+    uint8_t res = state->ra & memory;
+
+    set_flag(state, Z, res == 0x00);
+    set_flag(state, V, memory & 0x40);
+    set_flag(state, N, memory & 0x80);
+
 	return 0;
 }
 
 uint8_t op_bmi(_state* state) {
+    if (get_flag(state, N)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_bne(_state* state) {
+    if (!get_flag(state, Z)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_bpl(_state* state) {
+    if (!get_flag(state, N)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_brk(_state* state) {
+    state->pc++;
+
+    set_flag(state, I, 1);
+
+    write(0x0100 + state->stack--, (state->pc >> 8) & 0xFF);
+    write(0x0100 + state->stack--, state->pc & 0xFF);
+
+    set_flag(state, B, 1);
+    write(0x0100 + state->stack--, state->status);
+    set_flag(state, B, 0);
+
+    uint16_t low = read(IRQ_VECTOR);
+    uint16_t high = read(IRQ_VECTOR + 1);
+    state->pc = (high << 8) | low;
+
 	return 0;
 }
 
 uint8_t op_bvc(_state* state) {
+    if (!get_flag(state, V)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_bvs(_state* state) {
+    if (get_flag(state, V)) {
+        branch(state);
+    }
+
 	return 0;
 }
 
 uint8_t op_clc(_state* state) {
+    set_flag(state, C, 0);
 	return 0;
 }
 
 uint8_t op_cld(_state* state) {
+    set_flag(state, D, 0);
 	return 0;
 }
 
 uint8_t op_cli(_state* state) {
+    set_flag(state, I, 0);
 	return 0;
 }
 
 uint8_t op_clv(_state* state) {
+    set_flag(state, V, 0);
 	return 0;
 }
 
 uint8_t op_cmp(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+
+    set_flag(state, C, state->ra >= memory);
+    set_flag(state, Z, state->ra == memory);
+    set_flag(state, N, state->ra < memory);
+
+    return 1;
 }
 
 uint8_t op_cpx(_state* state) {
+    uint8_t memory = fetch(state);
+
+    set_flag(state, C, state->rx >= memory);
+    set_flag(state, Z, state->rx == memory);
+    set_flag(state, N, state->rx < memory);
+
 	return 0;
 }
 
 uint8_t op_cpy(_state* state) {
+    uint8_t memory = fetch(state);
+
+    set_flag(state, C, state->ry >= memory);
+    set_flag(state, Z, state->ry == memory);
+    set_flag(state, N, state->ry < memory);
+
 	return 0;
 }
 
 uint8_t op_dec(_state* state) {
+    uint8_t memory = fetch(state);
+    memory--;
+    write(state->addr, memory);
+
+    set_flag(state, Z, memory == 0x00);
+    set_flag(state, N, memory & 0x80);
+
 	return 0;
 }
 
 uint8_t op_dex(_state* state) {
+    state->rx--;
+    set_flag(state, Z, state->rx == 0x00);
+    set_flag(state, N, state->rx & 0x80);
+
 	return 0;
 }
 
 uint8_t op_dey(_state* state) {
+    state->ry--;
+    set_flag(state, Z, state->ry == 0x00);
+    set_flag(state, N, state->ry & 0x80);
+
 	return 0;
 }
 
 uint8_t op_eor(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->ra ^= memory;
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
+	return 1;
 }
 
 uint8_t op_inc(_state* state) {
+    uint8_t memory = fetch(state);
+    memory++;
+    write(state->addr, memory);
+
+    set_flag(state, Z, memory == 0x00);
+    set_flag(state, N, memory & 0x80);
+
 	return 0;
 }
 
 uint8_t op_inx(_state* state) {
+    state->rx++;
+    set_flag(state, Z, state->rx == 0x00);
+    set_flag(state, N, state->rx & 0x80);
+
 	return 0;
 }
 
 uint8_t op_iny(_state* state) {
+    state->ry++;
+    set_flag(state, Z, state->ry == 0x00);
+    set_flag(state, N, state->ry & 0x80);
+
 	return 0;
 }
 
 uint8_t op_jmp(_state* state) {
+    state->pc = state->addr;
+
 	return 0;
 }
 
 uint8_t op_jsr(_state* state) {
+    state->pc--;
+
+    write(0x0100 + state->stack--, (state->pc >> 8) & 0xFF);
+    write(0x0100 + state->stack--, state->pc & 0xFF);
+
+    state->pc = state->addr;
+
 	return 0;
 }
 
 uint8_t op_lda(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->ra = memory;
+
+    set_flag(state, Z, memory == 0x00);
+    set_flag(state, N, memory & 0x80);
+
+	return 1;
 }
 
 uint8_t op_ldx(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->rx = memory;
+
+    set_flag(state, Z, memory == 0x00);
+    set_flag(state, N, memory & 0x80);
+
+	return 1;
 }
 
 uint8_t op_ldy(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->ry = memory;
+
+    set_flag(state, Z, memory == 0x00);
+    set_flag(state, N, memory & 0x80);
+
+	return 1;
 }
 
 uint8_t op_lsr(_state* state) {
+    uint8_t memory = fetch(state);
+    uint8_t res = memory >> 1;
+
+    set_flag(state, C, memory & 0x01);
+    set_flag(state, Z, res == 0x00);
+    set_flag(state, N, 0);
+
+    if (is_imp(state)) {
+        state->ra = res;
+    } else {
+        write(state->addr, res);
+    }
+
 	return 0;
 }
 
@@ -236,90 +418,188 @@ uint8_t op_nop(_state* state) {
 }
 
 uint8_t op_ora(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    state->ra |= memory;
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
+	return 1;
 }
 
 uint8_t op_pha(_state* state) {
+    write(0x0100 + state->stack--, state->ra);
+
 	return 0;
 }
 
 uint8_t op_php(_state* state) {
+    write(0x0100 + state->stack--, state->status | B);
+
 	return 0;
 }
 
 uint8_t op_pla(_state* state) {
+    state->ra = read(0x0100 + ++state->stack);
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
 	return 0;
 }
 
 uint8_t op_plp(_state* state) {
-	return 0;
+    state->status = read(0x0100 + ++state->stack);
+
+    return 0;
 }
 
 uint8_t op_rol(_state* state) {
+    uint8_t memory = fetch(state);
+    uint8_t res = (memory << 1) | get_flag(state, C);
+
+    set_flag(state, C, memory & 0x80);
+    set_flag(state, Z, res == 0x00);
+    set_flag(state, N, res & 0x80);
+
+    if (is_imp(state)) {
+        state->ra = res;
+    } else {
+        write(state->addr, res);
+    }
+
 	return 0;
 }
 
 uint8_t op_ror(_state* state) {
+    uint8_t memory = fetch(state);
+    uint8_t res = (memory >> 1) | (get_flag(state, C) << 7);
+
+    set_flag(state, C, memory & 0x01);
+    set_flag(state, Z, res == 0x00);
+    set_flag(state, N, res & 0x80);
+
+    if (is_imp(state)) {
+        state->ra = res;
+    } else {
+        write(state->addr, res);
+    }
+
 	return 0;
 }
 
 uint8_t op_rti(_state* state) {
+    state->status = read(0x0100 + ++state->stack);
+    state->pc = read(0x0100 + ++state->stack);
+    state->pc |= (uint16_t)read(0x0100 + ++state->stack) << 8;
+
 	return 0;
 }
 
 uint8_t op_rts(_state* state) {
+    state->pc = read(0x0100 + ++state->stack) + 1;
+    state->pc |= (uint16_t)read(0x0100 + ++state->stack) << 8;
+
 	return 0;
 }
 
 uint8_t op_sbc(_state* state) {
-	return 0;
+    uint8_t memory = fetch(state);
+    uint16_t value = (uint16_t)memory ^ 0xFF;
+    uint16_t res = (uint16_t)state->ra + value + get_flag(state, C);
+
+    uint16_t overflow = (res ^ state->ra) & (res ^ value) & 0x80;
+    set_flag(state, C, res > 0xFF);
+    set_flag(state, Z, (res & 0xFF) == 0x00);
+    set_flag(state, V, overflow);
+    set_flag(state, N, res & 0x80);
+
+    state->ra = res & 0xFF;
+
+    return 1;
 }
 
 uint8_t op_sec(_state* state) {
+    set_flag(state, C, 1);
 	return 0;
 }
 
 uint8_t op_sed(_state* state) {
+    set_flag(state, D, 1);
 	return 0;
 }
 
 uint8_t op_sei(_state* state) {
+    set_flag(state, I, 1);
 	return 0;
 }
 
 uint8_t op_sta(_state* state) {
+    write(state->addr, state->ra);
 	return 0;
 }
 
 uint8_t op_stx(_state* state) {
+    write(state->addr, state->rx);
 	return 0;
 }
 
 uint8_t op_sty(_state* state) {
+    write(state->addr, state->ry);
 	return 0;
 }
 
 uint8_t op_tax(_state* state) {
+    state->rx = state->ra;
+
+    set_flag(state, Z, state->rx == 0x00);
+    set_flag(state, N, state->rx & 0x80);
+
 	return 0;
 }
 
 uint8_t op_tay(_state* state) {
+    state->ry = state->ra;
+
+    set_flag(state, Z, state->ry == 0x00);
+    set_flag(state, N, state->ry & 0x80);
+
 	return 0;
 }
 
 uint8_t op_tsx(_state* state) {
+    state->rx = state->stack;
+
+    set_flag(state, Z, state->rx == 0x00);
+    set_flag(state, N, state->rx & 0x80);
+
 	return 0;
 }
 
 uint8_t op_txa(_state* state) {
+    state->ra = state->rx;
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
 	return 0;
 }
 
 uint8_t op_txs(_state* state) {
+    state->stack = state->rx;
+
+    set_flag(state, Z, state->stack == 0x00);
+    set_flag(state, N, state->stack & 0x80);
+
 	return 0;
 }
 
 uint8_t op_tya(_state* state) {
+    state->ra = state->ry;
+
+    set_flag(state, Z, state->ra == 0x00);
+    set_flag(state, N, state->ra & 0x80);
+
 	return 0;
 }
 
