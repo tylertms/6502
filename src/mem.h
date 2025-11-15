@@ -2,6 +2,6 @@
 #include "cpu.h"
 #include <stdint.h>
 
-void mem_write(_state* state, uint16_t addr, uint8_t data);
-uint8_t mem_read(_state* state, uint16_t addr);
-uint8_t mem_fetch(_state* state);
+void ram_write(_state* state, uint16_t addr, uint8_t data);
+uint8_t ram_read(_state* state, uint16_t addr);
+uint8_t rom_read(_state* state, uint16_t addr);
